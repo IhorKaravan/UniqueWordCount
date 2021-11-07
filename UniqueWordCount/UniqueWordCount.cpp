@@ -3,10 +3,10 @@
 
 #include <iostream>
 #include <fstream>
-#include <set>
+#include <unordered_set>
 #include <vector>
 #include <functional>
-#include <thread> 
+#include <thread>
 
 using namespace std;
 
@@ -14,7 +14,7 @@ constexpr int THREAD_COUNT = 5;
 constexpr int BUFFER_LENGTH = 50;
 constexpr char WORD_SEP = ' ';
 
-void ProcessBuffer(char* buffer, int nStart, int nEnd, std::function<void(char*, int, std::set<std::vector<char>>&)> wordHandler, std::set<std::vector<char>>& unique_words)
+void ProcessBuffer(char* buffer, int nStart, int nEnd, std::function<void(char*, int, std::unordered_set<std::string>&)> wordHandler, std::unordered_set<std::string>& unique_words)
 {
 	int startPos = nStart;
 
@@ -31,9 +31,9 @@ void ProcessBuffer(char* buffer, int nStart, int nEnd, std::function<void(char*,
 	wordHandler(buffer + startPos, nEnd - startPos, unique_words);
 }
 
-size_t UniqueWordsCount(ifstream& file, std::function<void(char*, int, std::set<std::vector<char>>&)> wordHandler)
+size_t UniqueWordsCount(ifstream& file, std::function<void(char*, int, std::unordered_set<std::string>&)> wordHandler)
 {
-	std::set<std::vector<char>> main_unique_words;
+	std::unordered_set<std::string> main_unique_words;
 
 	file.seekg(0, ios::end);
 	const long long fileSize = file.tellg();
@@ -53,9 +53,9 @@ size_t UniqueWordsCount(ifstream& file, std::function<void(char*, int, std::set<
 		threads.emplace_back(std::thread());
 
 	// each thread has to has a unique set with words that will be merged
-	std::vector<std::set<std::vector<char>>> unique_words;
+	std::vector<std::unordered_set<std::string>> unique_words;
 	for (int i = 0; i < THREAD_COUNT; i++)
-		unique_words.emplace_back(std::set<std::vector<char>>());
+		unique_words.emplace_back(std::unordered_set<std::string>());
 
 	int readSize = bufferLength;
 	int bufferLengthToHandle = bufferLength;
@@ -165,12 +165,12 @@ int main()
 	file.open("12345.txt");
 
 	// function to insert the word into the container
-	std::function<void(char*, int length, std::set<std::vector<char>>&)> handler = [](char* buffer, int length, std::set<std::vector<char>>& unique_words) -> void
+	std::function<void(char*, int length, std::unordered_set<std::string>&)> handler = [](char* buffer, int length, std::unordered_set<std::string>& unique_words) -> void
 	{
 		if (!buffer || length <= 0)
 			return;
 
-		unique_words.insert(std::vector<char>(buffer, buffer + length));
+		unique_words.insert(std::string(buffer, buffer + length));
 	};
 
 	cout << "Unique words count:" << UniqueWordsCount(file, handler);
